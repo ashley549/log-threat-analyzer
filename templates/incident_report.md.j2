@@ -1,0 +1,38 @@
+# Incident Report — {{ inc.incident_id }}
+
+**Entity:** `{{ inc.entity }}`  
+**Risk level:** {{ inc.risk_level }} (score **{{ "%.1f"|format(inc.risk_score or 0) }}/10**)
+
+**Window:** {{ inc.first_seen }} → {{ inc.last_seen }}  
+**Evidence:** {{ inc.n_events }} events across {{ inc.n_detections }} detection(s)
+
+## Why this is risky (score breakdown)
+
+| Factor | Value | Max | Reason |
+|---|---|---|---|
+{% for c in components -%}
+| {{ c.name }} | {{ c.value }} | {{ c.max }} | {{ c.reason }} |
+{% endfor %}
+
+**Total: {{ total.value }}/10** — {{ total.reason }}
+
+## Detections that fired
+
+| Source | Detection | Severity | Window |
+|---|---|---|---|
+{% for d in detections -%}
+| {{ d.label }} | {{ d.description | truncate(120) }} | {{ "%.1f"|format(d.severity) }} | {{ d.first_seen }} → {{ d.last_seen }} |
+{% endfor %}
+
+## Analysis & recommended actions
+
+{{ recommendation }}
+
+## Evidence timeline
+
+{% for e in evidence -%}
+- `{{ e.timestamp }}` [{{ e.event_type }}/{{ e.status or "-" }}] user={{ e.user or "-" }} ip={{ e.source_ip or "-" }} host={{ e.host or "-" }}
+  `{{ e.raw_line }}`
+{% endfor %}
+---
+*Generated {{ generated_at }} by J-001 Log Security Analyzer*

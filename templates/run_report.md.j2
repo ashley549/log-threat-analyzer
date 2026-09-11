@@ -1,0 +1,52 @@
+# Security Analysis Report — {{ run.file }}
+
+**Generated:** {{ generated_at }}  
+**Pipeline time:** {{ "%.1f"|format(run.seconds or 0) }}s  
+**Log source:** `{{ run.file }}` ({{ run.stages.ingest.parsed }}/{{ run.stages.ingest.total_lines }} lines parsed)  
+**Window covered:** {{ window.start }} → {{ window.end }}
+
+## Executive summary
+
+Analyzed **{{ run.stages.ingest.events }}** events, producing **{{ incidents|length }}** incident(s):
+
+| Severity | Count |
+|---|---|
+{% for lvl in levels -%}
+| {{ lvl.label }} | {{ lvl.count }} |
+{% endfor %}
+
+{% if findings -%}
+**Key findings:**
+{% for f in findings -%}
+- {{ f }}
+{% endfor %}
+{%- endif %}
+
+## Incidents ({{ incidents|length }})
+
+| ID | Entity | Risk | Level | Window | Detections | Events |
+|---|---|---|---|---|---|---|
+{% for i in incidents -%}
+| {{ i.incident_id }} | `{{ i.entity }}` | {{ "%.1f"|format(i.risk_score or 0) }} | {{ i.risk_level }} | {{ i.first_seen }} → {{ i.last_seen }} | {{ i.n_detections }} | {{ i.n_events }} |
+{% endfor %}
+
+## Pipeline stages
+
+| Stage | Result |
+|---|---|
+| Parsing & normalization | {{ run.stages.ingest.events }} events ({{ run.stages.ingest.parsed }} parsed, {{ run.stages.ingest.malformed_kept }} malformed kept) |
+| Rule-based detection | {{ run.stages.rules.detections }} detection(s) |
+| ML anomaly detection | {{ run.stages.ml.detections }} anomaly window(s) |
+| Incident correlation | {{ run.stages.correlate.incidents }} incident(s) |
+| AI recommendations | {{ run.stages.recommend.recommended }}/{{ run.stages.recommend.total }} generated |
+
+## Incident details
+
+{% for i in incidents -%}
+### {{ i.incident_id }} — {{ i.entity }} ({{ i.risk_level }}, {{ "%.1f"|format(i.risk_score or 0) }}/10)
+
+{{ i.recommendation or "(no recommendation cached)" }}
+
+{% endfor %}
+---
+*Generated {{ generated_at }} by J-001 Log Security Analyzer — logs → parse → detect → correlate → score → explain*

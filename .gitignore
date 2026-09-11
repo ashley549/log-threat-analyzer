@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Data / artifacts
+data/
+*.db
+*.sqlite3
+
+# Secrets
+.env
+
+# Run outputs
+reports/
+shots/
+graphify-out/
+hermes_log/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
