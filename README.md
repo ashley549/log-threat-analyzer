@@ -7,7 +7,7 @@
 
 Ingests raw auth logs, flags suspicious events (rules + ML), correlates them
 into incidents, scores each incident's risk **with a visible breakdown**,
-explains *why* it's risky, and recommends what to do about it — with AI-written
+explains _why_ it's risky, and recommends what to do about it — with AI-written
 summaries via the **Google Gemini API** (free tier).
 
 ```
@@ -35,7 +35,6 @@ logs → parse/normalize → detect (rules + ML) → correlate into incidents
 > Add 2–3 screenshots here before pushing (Overview, incident detail, Reports).
 > Suggested: `docs/screenshot-overview.png` etc.
 
-
 ## Frontend
 
 **SENTINEL** — a dependency-free single-page app (vanilla HTML/CSS/JS) served
@@ -43,16 +42,16 @@ by FastAPI from `frontend/`. Hash-routed views, hand-rolled SVG charts, and a
 blue-centered dark theme (every chrome surface is a shade of one blue sky
 ramp; warm hues are reserved for severity only).
 
-| View | Route | What it shows |
-|---|---|---|
-| Overview | `/#/overview` | KPIs, posture ring, threat timeline, distribution, live feed |
-| Analyze | `/#/analyze` | Drag-&-drop upload, one-click security demos, staged pipeline progress, parser diagnostics |
-| Incidents | `/#/incidents` | Filterable, risk-sorted incident cards |
-| Incident detail | `/#/incident/INC-001` | Explainable score breakdown, attack timeline, AI response, raw evidence |
-| Risk Profiles | `/#/profiles` | Per-entity behavior-over-time line, stats, full incident link |
-| Threat Intel | `/#/intel` | Evidence-based source reputation (internal vs external) |
-| Reports | `/#/reports` | Markdown run/incident report downloads + CSV/JSON exports |
-| Settings | `/#/settings` | Engine configuration + LLM key status |
+| View            | Route                 | What it shows                                                                              |
+| --------------- | --------------------- | ------------------------------------------------------------------------------------------ |
+| Overview        | `/#/overview`         | KPIs, posture ring, threat timeline, distribution, live feed                               |
+| Analyze         | `/#/analyze`          | Drag-&-drop upload, one-click security demos, staged pipeline progress, parser diagnostics |
+| Incidents       | `/#/incidents`        | Filterable, risk-sorted incident cards                                                     |
+| Incident detail | `/#/incident/INC-001` | Explainable score breakdown, attack timeline, AI response, raw evidence                    |
+| Risk Profiles   | `/#/profiles`         | Per-entity behavior-over-time line, stats, full incident link                              |
+| Threat Intel    | `/#/intel`            | Evidence-based source reputation (internal vs external)                                    |
+| Reports         | `/#/reports`          | Markdown run/incident report downloads + CSV/JSON exports                                  |
+| Settings        | `/#/settings`         | Engine configuration + LLM key status                                                      |
 
 The JSON API lives under `/api/*` (see `app/main.py`); the same server also
 keeps the legacy contract (`/ingest`, `/incidents`, `/dashboard/summary`) and
@@ -130,14 +129,30 @@ works fully: recommendations fall back to a built-in deterministic playbook.
 
 ## Run — one command per layer
 
-| Goal | Command |
-|---|---|
-| Generate demo data (log + answer key) | `python -m generator.run` |
-| Run the full analysis (CLI) | `python -m app.ingest && python -m app.detect && python -m app.detect_ml && python -m app.correlate && python -m app.score && python -m app.recommend` |
-| **Web app (SENTINEL)** | `venv\Scripts\uvicorn.exe app.main:app --reload` → open http://localhost:8000 |
-| REST API (+ auto docs at `/docs`) | same server — `/api/*` + legacy endpoints |
-| Export all reports to `reports/` | `python -m app.report` |
-| Benchmark on 100k-line log | `python -m app.bench` |
+| Goal                                  | Command                                                                                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Generate demo data (log + answer key) | `python -m generator.run`                                                                                                                              |
+| Run the full analysis (CLI)           | `python -m app.ingest && python -m app.detect && python -m app.detect_ml && python -m app.correlate && python -m app.score && python -m app.recommend` |
+| **Web app (SENTINEL)**                | `venv\Scripts\uvicorn.exe app.main:app --reload` → open http://localhost:8000                                                                          |
+| REST API (+ auto docs at `/docs`)     | same server — `/api/*` + legacy endpoints                                                                                                              |
+| Export all reports to `reports/`      | `python -m app.report`                                                                                                                                 |
+| Benchmark on 100k-line log            | `python -m app.bench`                                                                                                                                  |
+
+## Deploy on Render
+
+This repository includes a Render Blueprint in `render.yaml`. Create a new
+Blueprint Instance in Render and select this repository. Render will install
+`requirements.txt`, start Uvicorn on the injected `$PORT`, and use `/healthz`
+for health checks.
+
+The Blueprint uses a 1 GB persistent disk mounted at `/var/data`; the web
+SQLite database is stored there through `SENTINEL_DATA_DIR`. Add
+`GEMINI_API_KEY` as a secret environment variable if Gemini recommendations
+are desired. Without it, the built-in playbook remains active.
+
+The persistent disk requires Render's Starter plan and is attached to a single
+web instance. Without persistent storage, the app still runs, but uploaded
+analyses are lost whenever the service is redeployed or restarted.
 
 ## The demo dataset
 
@@ -145,13 +160,13 @@ works fully: recommendations fall back to a built-in deterministic playbook.
 traffic with **4 planted attacks** and a ground-truth answer key the detector
 never sees:
 
-| ID | Attack | Result after pipeline |
-|---|---|---|
-| S1 | SSH brute force on root (88 attempts) | INC-005, 🔴 Critical 10.0 — compromise included |
-| S2 | Credential stuffing from 5-IP botnet | INC-003, 🔴 Critical 9.3 — alice + m.chen compromised (found in raw evidence, below rule thresholds) |
-| S3 | Privilege escalation → backdoor user `svc_bkp` | INC-004, 🟠 High 7.6 |
-| S4 | Impossible travel (alice, office → abroad in 12 min) | INC-001, 🟠 High 6.4 |
-| —  | *(benign)* dev.jones works nights | INC-002, 🟢 Low 1.9 — keeps the system honest |
+| ID  | Attack                                               | Result after pipeline                                                                                |
+| --- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| S1  | SSH brute force on root (88 attempts)                | INC-005, 🔴 Critical 10.0 — compromise included                                                      |
+| S2  | Credential stuffing from 5-IP botnet                 | INC-003, 🔴 Critical 9.3 — alice + m.chen compromised (found in raw evidence, below rule thresholds) |
+| S3  | Privilege escalation → backdoor user `svc_bkp`       | INC-004, 🟠 High 7.6                                                                                 |
+| S4  | Impossible travel (alice, office → abroad in 12 min) | INC-001, 🟠 High 6.4                                                                                 |
+| —   | _(benign)_ dev.jones works nights                    | INC-002, 🟢 Low 1.9 — keeps the system honest                                                        |
 
 ## Sample output
 
@@ -196,14 +211,14 @@ Evidence timeline: 86 raw log lines (Jun 9 14:05:00 → 14:16:37)
 
 100,748-line synthetic log (`data/perf/`), full pipeline:
 
-| Stage | Time |
-|---|---|
-| Ingest | 1.7s |
-| Rules (all 6) | 0.4s |
-| ML (features + forest) | 10.2s |
-| Correlate | 0.1s |
-| Score + recommend | 1.0s |
-| **Total** | **13.5s** (~7,500 lines/sec) |
+| Stage                  | Time                         |
+| ---------------------- | ---------------------------- |
+| Ingest                 | 1.7s                         |
+| Rules (all 6)          | 0.4s                         |
+| ML (features + forest) | 10.2s                        |
+| Correlate              | 0.1s                         |
+| Score + recommend      | 1.0s                         |
+| **Total**              | **13.5s** (~7,500 lines/sec) |
 
 Optimizations: rules 9.3s→0.4s (two-pointer + bisect),
 ML 24.9s→10.2s (vectorized feature engineering, no per-row rescans),

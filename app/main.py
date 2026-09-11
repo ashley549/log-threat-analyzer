@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import sqlite3
 import tempfile
@@ -46,10 +47,16 @@ FRONTEND_DIR = ROOT / "frontend"
 
 app = FastAPI(title="SENTINEL — Log Security Analyzer", version="1.0.0")
 
+
+@app.get("/healthz", include_in_schema=False)
+def healthz():
+    return {"status": "ok"}
+
 # The web app's own analysis store — user uploads and demo runs land here.
 # A fresh server starts empty (the UI shows the upload/demo CTA).
 # db/logsec.db is the internal CLI/test-fixture DB and is never served here.
-API_DB = ROOT / "db" / "webapp.db"
+DATA_DIR = Path(os.environ.get("SENTINEL_DATA_DIR", str(ROOT / "db")))
+API_DB = DATA_DIR / "webapp.db"
 
 
 def _db() -> Path:
