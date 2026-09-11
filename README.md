@@ -14,7 +14,8 @@ summaries via the **Google Gemini API** (free tier).
 logs → parse/normalize → detect (rules + ML) → correlate into incidents
      → score risk → explain (evidence + AI) → web app → report
 ```
-
+## working demo link
+  https://log-threat-analyzer.onrender.com
 ## Highlights
 
 - **Explainable risk scoring** — every incident's 0–10 score is itemized into
